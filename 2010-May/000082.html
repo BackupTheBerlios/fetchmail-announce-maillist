@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [fetchmail-announce] fetchmail security announcement fetchmail-SA-2010-02 (CVE-2010-1167)
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/fetchmail-announce/2010-May/index.html" >
+   <LINK REL="made" HREF="mailto:fetchmail-announce%40lists.berlios.de?Subject=Re%3A%20%5Bfetchmail-announce%5D%20fetchmail%20security%20announcement%0A%20fetchmail-SA-2010-02%20%28CVE-2010-1167%29&In-Reply-To=%3C4be27fa0.5AbXPQ/YYVdzuyM5%25matthias.andree%40gmx.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000081.html">
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[fetchmail-announce] fetchmail security announcement fetchmail-SA-2010-02 (CVE-2010-1167)</H1>
+    <B>matthias.andree at gmx.de</B> 
+    <A HREF="mailto:fetchmail-announce%40lists.berlios.de?Subject=Re%3A%20%5Bfetchmail-announce%5D%20fetchmail%20security%20announcement%0A%20fetchmail-SA-2010-02%20%28CVE-2010-1167%29&In-Reply-To=%3C4be27fa0.5AbXPQ/YYVdzuyM5%25matthias.andree%40gmx.de%3E"
+       TITLE="[fetchmail-announce] fetchmail security announcement fetchmail-SA-2010-02 (CVE-2010-1167)">matthias.andree at gmx.de
+       </A><BR>
+    <I>Thu May  6 10:36:48 CEST 2010</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000081.html">[fetchmail-announce] fetchmail 6.3.17 security/regression fix	release
+</A></li>
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#82">[ date ]</a>
+              <a href="thread.html#82">[ thread ]</a>
+              <a href="subject.html#82">[ subject ]</a>
+              <a href="author.html#82">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+fetchmail-SA-2010-02: Denial of service in debug mode w/ multichar locales
+
+Topics:		Denial of service in debug output
+
+Author:		Matthias Andree
+Version:	1.0
+Announced:	2010-05-06
+Type:		Unbounded allocation of memory until exhaustion
+Impact:		Denial of service
+Danger:		low
+
+CVE Name:	CVE-2010-1167
+CVSSv2:		(AV:N/AC:M/Au:N/C:N/I:N/A:P/E:U/RL:O/RC:C)
+CVSS scores:	3.2, Base 4.3 (Impact 2.9, Exploitability 8.6), Temporal 3.2
+		This is calculated without Environmental Score.
+URL:		<A HREF="http://www.fetchmail.info/fetchmail-SA-2010-02.txt">http://www.fetchmail.info/fetchmail-SA-2010-02.txt</A>
+Project URL:	<A HREF="http://www.fetchmail.info/">http://www.fetchmail.info/</A>
+
+Affects:	fetchmail releases 4.6.3 up to and including 6.3.16
+
+Not affected:	fetchmail release 6.3.17 and newer
+
+Corrected:	2010-04-24 Git, required commits:
+		167fa2093e82f891eb2fcb6eaa0b1eb3685f44e3
+		ec06293134b85876f9201d8a52b844c41581b2b3
+
+		2010-04-30 fetchmail 6.3.17-pre1 tarball
+
+		2010-05-06 fetchmail 6.3.17 release tarball
+
+
+0. Release history
+==================
+
+2010-04-18 0.1	first draft (visible in SVN and through oss-security)
+2010-04-19 0.2	add note announcements may appear before releases
+2010-04-20 0.3	add CVE name, fix Type:
+2010-04-24 0.4	revise patch
+2010-04-29 0.5	add info on contributing/mitigating factors
+2010-06-05 1.0	complete
+
+
+1. Background
+=============
+
+fetchmail is a software package to retrieve mail from remote POP2, POP3,
+IMAP, ETRN or ODMR servers and forward it to local SMTP, LMTP servers or
+message delivery agents. It supports SSL and TLS security layers through
+the OpenSSL library, if enabled at compile time and if also enabled at
+run time.
+
+
+2. Problem description and Impact
+=================================
+
+In debug mode (-v -v), fetchmail prints information that was obtained from the
+upstream server (POP3 UIDL lists) or from message headers retrieved from it.
+  If printing such information fails, for instance because there are invalid
+multibyte character sequences in this information (message headers), fetchmail
+will misinterpret this condition, and believe that the buffer was too small,
+and reallocate a bigger one (with linearly increasing buffer size), and repeat,
+until the allocation fails. At that point, fetchmail will abort.
+
+The exact combination of contributing and mitigating factors is not
+fully understood; GNU glibc 2.7 and 2.10.1 on i586 report EILSEQ when
+printing invalid sequences through a %.*s format string in multibyte
+locales such as de_DE.UTF-8; NetBSD 5, FreeBSD 8 and Solaris 10 do not.
+However, the issue is a genuine fetchmail bug that deserves a fix.
+
+Note that the &quot;Affects:&quot; line above may be inaccurate, and it may be that
+versions before 5.6.6 are actually unaffected.  The author was unable to
+compile such old fetchmail versions to verify the existence of the bug.
+  Given that other security issues are present in such versions, those should
+not be used, and the wider version range was listed as vulnerable to err
+towards the safe.
+
+
+3. Solution
+===========
+
+There are two alternatives, either of them by itself is sufficient:
+
+a. Apply the patch found in section B of this announcement to
+   fetchmail 6.3.14 or newer, recompile and reinstall it.
+
+b. Install fetchmail 6.3.17 or newer after it will have become available.
+   (Note that the announcements may be publicly visible quite some time
+   before the release is made, particularly for minor bugs.)
+   The fetchmail source code is always available from
+   &lt;<A HREF="http://developer.berlios.de/project/showfiles.php?group_id=1824">http://developer.berlios.de/project/showfiles.php?group_id=1824</A>&gt;.
+
+
+4. Workaround
+=============
+
+Run fetchmail with at most one -v (--verbose) option.
+
+
+A. Copyright, License and Warranty
+==================================
+
+(C) Copyright 2010 by Matthias Andree, &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/fetchmail-announce">matthias.andree at gmx.de</A>&gt;.
+Some rights reserved.
+
+This work is licensed under the Creative Commons
+Attribution-Noncommercial-No Derivative Works 3.0 Germany License.
+To view a copy of this license, visit
+<A HREF="http://creativecommons.org/licenses/by-nc-nd/3.0/de/">http://creativecommons.org/licenses/by-nc-nd/3.0/de/</A> or send a letter to
+
+Creative Commons
+171 Second Street
+Suite 300
+SAN FRANCISCO, CALIFORNIA 94105
+USA
+
+
+THIS WORK IS PROVIDED FREE OF CHARGE AND WITHOUT ANY WARRANTIES.
+Use the information herein at your own risk.
+
+
+B. Patch to remedy the problem
+==============================
+
+Note that when taking this from a GnuPG clearsigned file, the lines
+starting with a &quot;-&quot; character are prefixed by another &quot;- &quot; (dash +
+blank) combination. Either feed this file through GnuPG to strip them,
+or strip them manually. You may want to use the &quot;-p1&quot; flag to patch.
+
+Whitespace differences can usually be ignored by invoking &quot;patch -l&quot;,
+so try this if the patch does not apply.
+
+diff --git a/rfc822.c b/rfc822.c
+index 6f2dbf3..dbcda32 100644
+- --- a/rfc822.c
++++ b/rfc822.c
+@@ -25,6 +25,7 @@ MIT license.  Compile with -DMAIN to build the demonstrator.
+ #include  &lt;stdlib.h&gt;
+ 
+ #include &quot;fetchmail.h&quot;
++#include &quot;sdump.h&quot;
+ 
+ #ifndef MAIN
+ #include &quot;i18n.h&quot;
+@@ -74,9 +75,10 @@ char *reply_hack(
+     }
+ 
+ #ifndef MAIN
+- -    if (outlevel &gt;= O_DEBUG)
+- -	report_build(stdout, GT_(&quot;About to rewrite %.*s...\n&quot;),
+- -			(int)BEFORE_EOL(buf), buf);
++    if (outlevel &gt;= O_DEBUG) {
++	report_build(stdout, GT_(&quot;About to rewrite %s...\n&quot;), (cp = sdump(buf, BEFORE_EOL(buf))));
++	xfree(cp);
++    }
+ 
+     /* make room to hack the address; buf must be malloced */
+     for (cp = buf; *cp; cp++)
+@@ -211,9 +213,12 @@ char *reply_hack(
+     }
+ 
+ #ifndef MAIN
+- -    if (outlevel &gt;= O_DEBUG)
+- -	report_complete(stdout, GT_(&quot;...rewritten version is %.*s.\n&quot;),
+- -			(int)BEFORE_EOL(buf), buf);
++    if (outlevel &gt;= O_DEBUG) {
++	report_complete(stdout, GT_(&quot;...rewritten version is %s.\n&quot;),
++			(cp = sdump(buf, BEFORE_EOL(buf))));
++	xfree(cp)
++    }
++
+ #endif /* MAIN */
+     *length = strlen(buf);
+     return(buf);
+diff --git a/uid.c b/uid.c
+index fdc6f5d..9a62ee2 100644
+- --- a/uid.c
++++ b/uid.c
+@@ -20,6 +20,7 @@
+ 
+ #include &quot;fetchmail.h&quot;
+ #include &quot;i18n.h&quot;
++#include &quot;sdump.h&quot;
+ 
+ /*
+  * Machinery for handling UID lists live here.  This is mainly to support
+@@ -249,8 +250,11 @@ void initialize_saved_lists(struct query *hostlist, const char *idfile)
+ 	    {
+ 		report_build(stdout, GT_(&quot;Old UID list from %s:&quot;), 
+ 			     ctl-&gt;server.pollname);
+- -		for (idp = ctl-&gt;oldsaved; idp; idp = idp-&gt;next)
+- -		    report_build(stdout, &quot; %s&quot;, idp-&gt;id);
++		for (idp = ctl-&gt;oldsaved; idp; idp = idp-&gt;next) {
++		    char *t = sdump(idp-&gt;id, strlen(idp-&gt;id));
++		    report_build(stdout, &quot; %s&quot;, t);
++		    free(t);
++		}
+ 		if (!idp)
+ 		    report_build(stdout, GT_(&quot; &lt;empty&gt;&quot;));
+ 		report_complete(stdout, &quot;\n&quot;);
+@@ -260,8 +264,11 @@ void initialize_saved_lists(struct query *hostlist, const char *idfile)
+ 	if (uidlcount)
+ 	{
+ 	    report_build(stdout, GT_(&quot;Scratch list of UIDs:&quot;));
+- -	    for (idp = scratchlist; idp; idp = idp-&gt;next)
+- -		report_build(stdout, &quot; %s&quot;, idp-&gt;id);
++	    for (idp = scratchlist; idp; idp = idp-&gt;next) {
++		char *t = sdump(idp-&gt;id, strlen(idp-&gt;id));
++		report_build(stdout, &quot; %s&quot;, t);
++		free(t);
++	    }
+ 	    if (!idp)
+ 		report_build(stdout, GT_(&quot; &lt;empty&gt;&quot;));
+ 	    report_complete(stdout, &quot;\n&quot;);
+@@ -517,8 +524,11 @@ void uid_swap_lists(struct query *ctl)
+ 	    report_build(stdout, GT_(&quot;Merged UID list from %s:&quot;), ctl-&gt;server.pollname);
+ 	else
+ 	    report_build(stdout, GT_(&quot;New UID list from %s:&quot;), ctl-&gt;server.pollname);
+- -	for (idp = dofastuidl ? ctl-&gt;oldsaved : ctl-&gt;newsaved; idp; idp = idp-&gt;next)
+- -	    report_build(stdout, &quot; %s = %d&quot;, idp-&gt;id, idp-&gt;val.status.mark);
++	for (idp = dofastuidl ? ctl-&gt;oldsaved : ctl-&gt;newsaved; idp; idp = idp-&gt;next) {
++	    char *t = sdump(idp-&gt;id, strlen(idp-&gt;id));
++	    report_build(stdout, &quot; %s = %d&quot;, t, idp-&gt;val.status.mark);
++	    free(t);
++        }
+ 	if (!idp)
+ 	    report_build(stdout, GT_(&quot; &lt;empty&gt;&quot;));
+ 	report_complete(stdout, &quot;\n&quot;);
+@@ -567,8 +577,11 @@ void uid_discard_new_list(struct query *ctl)
+ 	/* this is now a merged list! the mails which were seen in this
+ 	 * poll are marked here. */
+ 	report_build(stdout, GT_(&quot;Merged UID list from %s:&quot;), ctl-&gt;server.pollname);
+- -	for (idp = ctl-&gt;oldsaved; idp; idp = idp-&gt;next)
+- -	    report_build(stdout, &quot; %s = %d&quot;, idp-&gt;id, idp-&gt;val.status.mark);
++	for (idp = ctl-&gt;oldsaved; idp; idp = idp-&gt;next) {
++	    char *t = sdump(idp-&gt;id, strlen(idp-&gt;id));
++	    report_build(stdout, &quot; %s = %d&quot;, t, idp-&gt;val.status.mark);
++	    free(t);
++	}
+ 	if (!idp)
+ 	    report_build(stdout, GT_(&quot; &lt;empty&gt;&quot;));
+ 	report_complete(stdout, &quot;\n&quot;);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEARECAAYFAkvicswACgkQvmGDOQUufZVq9wCg9j3yrW+aMQs9kMh5mTT8xPO0
+w+MAoJm8g5AlDCwoi2jdmziqlO7/zBxx
+=WEJ3
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000081.html">[fetchmail-announce] fetchmail 6.3.17 security/regression fix	release
+</A></li>
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#82">[ date ]</a>
+              <a href="thread.html#82">[ thread ]</a>
+              <a href="subject.html#82">[ subject ]</a>
+              <a href="author.html#82">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/fetchmail-announce">More information about the fetchmail-announce
+mailing list</a><br>
+</body></html>

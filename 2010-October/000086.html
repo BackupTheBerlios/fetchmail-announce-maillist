@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [fetchmail-announce] fetchmail erratum notice fetchmail-EN-2010-03
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/fetchmail-announce/2010-October/index.html" >
+   <LINK REL="made" HREF="mailto:fetchmail-announce%40lists.berlios.de?Subject=Re%3A%20%5Bfetchmail-announce%5D%20fetchmail%20erratum%20notice%20fetchmail-EN-2010-03&In-Reply-To=%3C4cb9683b.GRVDFFRVl/sdsXi1%25matthias.andree%40gmx.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000085.html">
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[fetchmail-announce] fetchmail erratum notice fetchmail-EN-2010-03</H1>
+    <B>matthias.andree at gmx.de</B> 
+    <A HREF="mailto:fetchmail-announce%40lists.berlios.de?Subject=Re%3A%20%5Bfetchmail-announce%5D%20fetchmail%20erratum%20notice%20fetchmail-EN-2010-03&In-Reply-To=%3C4cb9683b.GRVDFFRVl/sdsXi1%25matthias.andree%40gmx.de%3E"
+       TITLE="[fetchmail-announce] fetchmail erratum notice fetchmail-EN-2010-03">matthias.andree at gmx.de
+       </A><BR>
+    <I>Sat Oct 16 10:54:19 CEST 2010</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000085.html">[fetchmail-announce] fetchmail 6.3.18 regression/bug fix release
+</A></li>
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#86">[ date ]</a>
+              <a href="thread.html#86">[ thread ]</a>
+              <a href="subject.html#86">[ subject ]</a>
+              <a href="author.html#86">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+fetchmail-EN-2010-03: fetchmail SASL bugs prevent successful authentication
+
+Topics:		Authentication incapability in older fetchmail versions
+
+Author:		Matthias Andree
+Version:	1.0
+Announced:	2010-10-16
+Impact:		Denial of service
+
+URL:		<A HREF="http://www.fetchmail.info/fetchmail-EN-2010-03.txt">http://www.fetchmail.info/fetchmail-EN-2010-03.txt</A>
+Project URL:	<A HREF="http://www.fetchmail.info/">http://www.fetchmail.info/</A>
+
+Affects:	fetchmail up to and including 6.3.17
+
+Not affected:	fetchmail release 6.3.18 and newer
+
+Corrected:	2010-10-09 Git, required commit:
+		cc50a92a07e864c3be6a895f2f7daaa426814d45
+		(note that you need to check out all changes up to this
+		 commit, just cherry-picking this will not suffice)
+
+		2010-10-09 fetchmail 6.3.18 release tarball
+
+
+0. Release history
+==================
+
+2010-10-16 1.0	complete
+
+
+1. Background
+=============
+
+This first &quot;fetchmail-EN&quot; is an errata notice, issued to notify
+fetchmail users and distributors of critical bugs that do not, however,
+expose the computer running fetchmail to security (privacy, integrity or
+availability) threats. The numbering is inlined with the fetchmail
+security advisory numbering for redundancy.
+
+
+fetchmail is a software package to retrieve mail from remote POP2, POP3,
+IMAP, ETRN or ODMR servers and forward it to local SMTP, LMTP servers or
+message delivery agents. It supports SSL and TLS security layers through
+the OpenSSL library, if enabled at compile time and if also enabled at
+run time.
+
+
+2. Problem description and Impact
+=================================
+
+Fetchmail can be configured at compile time to support various AUTH or
+SASL schemes.
+
+Some of the schemes, notably GSSAPI, can fail in the middle of the
+protocol data exchange.  In this case, the client (fetchmail) is
+supposed to abort the authentication by sending a line with just an
+asterisk &quot;*&quot;.
+
+However, all fetchmail versions before 6.3.18 have not aborted failing
+authenticators properly (but just sent an empty line).
+
+This caused fetchmail to pick up the authentication error too late and
+mistake it for an error to a different scheme it tried later on.
+
+Notably, GSSAPI-enabled fetchmail was frequently reported to fail
+authentication against Exchange 2007 or 2010 through Debian bug trackers
+and the fetchmail mailing lists.  This is considered sufficiently grave
+to warrant an erratum notice.  This is a bug affecting fetchmail 6.3.17
+and all previous releases.
+
+
+3. Solution
+===========
+
+Install fetchmail release 6.3.18 or newer.
+
+The fetchmail source code is always available from
+&lt;<A HREF="http://developer.berlios.de/project/showfiles.php?group_id=1824">http://developer.berlios.de/project/showfiles.php?group_id=1824</A>&gt;.
+
+Since the changes are non-trivial, 6.3.18 contains other unrelated
+important fixes (such as applying timeout to the authentication phase,
+or mispicking an incompatible libmd5.so), and because only full releases
+have been tested, no separate patch is made available.
+
+For details on what else changed in release 6.3.18, please see the NEWS
+file shipping with fetchmail 6.3.18, or its online copy at
+&lt;<A HREF="http://developer.berlios.de/project/shownotes.php?group_id=1824&amp;release_id=17957">http://developer.berlios.de/project/shownotes.php?group_id=1824&amp;release_id=17957</A>&gt;.
+
+
+4. Workaround
+=============
+
+Configure the required authentication scheme explicitly in the rcfile
+or on the command line.  When using TLS or SSL, and --sslcertck is in
+effect, that might be --auth password on the command line. (In the
+rcfile, the &quot;--&quot; have to be omitted.)
+
+
+A. Copyright, License and Warranty
+==================================
+
+(C) Copyright 2010 by Matthias Andree, &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/fetchmail-announce">matthias.andree at gmx.de</A>&gt;.
+Some rights reserved.
+
+This work is licensed under the Creative Commons
+Attribution-Noncommercial-No Derivative Works 3.0 Germany License.
+To view a copy of this license, visit
+<A HREF="http://creativecommons.org/licenses/by-nc-nd/3.0/de/">http://creativecommons.org/licenses/by-nc-nd/3.0/de/</A> or send a letter to
+
+Creative Commons
+171 Second Street
+Suite 300
+SAN FRANCISCO, CALIFORNIA 94105
+USA
+
+
+THIS WORK IS PROVIDED FREE OF CHARGE AND WITHOUT ANY WARRANTIES.
+Use the information herein at your own risk.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEARECAAYFAky5ZbwACgkQvmGDOQUufZUxtACg6+ZeL9nFx8+wBrBE4u5B8Bz1
+zYsAn2THGpJx72t9tjPRYFBY9PJggj6G
+=QqR7
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000085.html">[fetchmail-announce] fetchmail 6.3.18 regression/bug fix release
+</A></li>
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#86">[ date ]</a>
+              <a href="thread.html#86">[ thread ]</a>
+              <a href="subject.html#86">[ subject ]</a>
+              <a href="author.html#86">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/fetchmail-announce">More information about the fetchmail-announce
+mailing list</a><br>
+</body></html>
